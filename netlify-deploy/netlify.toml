@@ -1,0 +1,14 @@
+[build]
+  command = "echo 'Frontend ready for deployment'"
+  publish = "."
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[env.production]
+  environment = { API_BASE_URL = "https://your-backend.railway.app" }
+
+[env.staging]
+  environment = { API_BASE_URL = "http://localhost:8080" }
