@@ -111,7 +111,7 @@ st.subheader("Monthly Trends")
 fig = px.line(
     monthly_df,
     x='Month',
-    y=['Total', 'Resolved', 'Pending', 'Escalated'],
+    y=['Tickets', 'Resolved', 'Pending', 'Escalated'],
     title="Ticket Volume Trend",
     markers=True,
     labels={'value': 'Count', 'variable': 'Status'}
