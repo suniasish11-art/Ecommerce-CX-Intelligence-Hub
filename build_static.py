@@ -726,11 +726,11 @@ function cxTab(id){
   window.scrollTo({top:0});
   sessionStorage.setItem('cx_active_tab', id);
 }
-// Restore last active tab on load
-document.addEventListener('DOMContentLoaded',function(){
+// Init tab immediately — scripts run after DOM so no need to wait for DOMContentLoaded
+(function(){
   var last = sessionStorage.getItem('cx_active_tab') || 'a';
   cxTab(last);
-});
+})();
 """
 html = html.replace('// ── Sidebar Navigation', tab_js + '\n// ── Sidebar Navigation')
 
