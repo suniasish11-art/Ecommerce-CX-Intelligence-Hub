@@ -1989,12 +1989,8 @@ function computeAll(tix){
   animateRing(kpis.csat_ring);
   applyExecBrief(exec);
   applySignalCards(signals);
-  // Benchmark strip
-  var industry=71;
-  var pts=Math.round(kpis.csat_score-industry);
-  var sigCount=tix.filter(function(r){return r[10]&&r[10]!=='—'&&r[10]!=='-';}).length;
-  var totalAddr=_sum(tix.map(function(r){return Math.abs(r[9]);}));
-  applyBenchmarkStrip(kpis.csat_score, industry, pts, sigCount, _fmtK(totalAddr));
+  // Benchmark strip: values pre-baked by Python (87.7% CSAT, +17pts, 10 signals, $120K)
+  // Not overridden here — JS avg-of-ticket-scores != agent CSAT%, and signal count differs
   // Section D cards
   applyDCards(tix, monthly);
   // Redraw charts
