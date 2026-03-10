@@ -49,3 +49,4 @@ ENV/
 
 # Local Netlify folder
 .netlify
+folder/
