@@ -354,6 +354,23 @@ tr.exp-row>td{background:#fafbff!important;cursor:default;padding:0;border-botto
 .content > .section-card{display:none!important}
 .content > .section-card.cx-show{display:block!important}
 
+
+/* ── Date Range Filter ── */
+.cx-date-filter{display:flex;align-items:center;gap:8px;margin-left:auto;padding:0 16px}
+.cx-date-filter label{font-size:11px;font-weight:600;color:var(--text-mid);white-space:nowrap}
+.cx-date-filter input[type=date]{
+  padding:5px 8px;border:1.5px solid var(--purple-border);border-radius:7px;
+  font-size:11px;color:var(--text-dark);background:var(--white);
+  font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;
+}
+.cx-date-filter input[type=date]:focus{border-color:var(--purple)}
+.cx-date-reset{
+  padding:5px 10px;background:var(--purple-light);color:var(--purple);
+  border:none;border-radius:7px;font-size:11px;font-weight:600;
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+}
+.cx-date-reset:hover{background:var(--purple);color:#fff}
+
 </style>
 </head>
 
@@ -496,6 +513,13 @@ function doLogin(){
     <button class="cx-tab" id="cxtab-c" onclick="cxTab('c')">📡 Signal Intelligence <span class="cx-cnt">6</span></button>
     <button class="cx-tab" id="cxtab-d" onclick="cxTab('d')">🎫 Ticket Intelligence <span class="cx-cnt">1K</span></button>
     <button class="cx-tab" id="cxtab-e" onclick="cxTab('e')">📋 Executive Briefing</button>
+    <div class="cx-date-filter">
+      <label>From</label>
+      <input type="date" id="dr-from" onchange="applyDateFilter()"/>
+      <label>To</label>
+      <input type="date" id="dr-to" onchange="applyDateFilter()"/>
+      <button class="cx-date-reset" onclick="resetDateFilter()">Reset</button>
+    </div>
   </div>
   <div class="content">
 
@@ -515,15 +539,15 @@ function doLogin(){
 
       <!-- Benchmark strip (GTM) -->
       <div class="benchmark-strip">
-        <div class="bm-item"><div class="bm-val">71%</div><div class="bm-lbl">Industry Avg CSAT</div></div>
+        <div class="bm-item"><div class="bm-val" id="bm-industry">71%</div><div class="bm-lbl">Industry Avg CSAT</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-val" style="color:var(--purple)">87.7%</div><div class="bm-lbl">Your CSAT Score</div></div>
+        <div class="bm-item"><div class="bm-val" id="bm-csat" style="color:var(--purple)">87.7%</div><div class="bm-lbl">Your CSAT Score</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-win">+17pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
+        <div class="bm-item"><div class="bm-win" id="bm-pts">+17pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
         <div class="bm-sep"></div>
         <div class="bm-item"><div class="bm-val" style="color:var(--green)">Top 15%</div><div class="bm-lbl">Ecommerce CX Percentile</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-val" style="color:var(--red)">10 Signals</div><div class="bm-lbl">Detected · $120K addressable</div></div>
+        <div class="bm-item"><div class="bm-val" id="bm-signals" style="color:var(--red)">10 Signals</div><div class="bm-lbl" id="bm-addr">Detected · $120K addressable</div></div>
       </div>
 
       <!-- Filter row -->
@@ -892,16 +916,16 @@ function doLogin(){
           <div style="display:flex;align-items:center;gap:10px;width:100%">
             <div class="metric-icon">🎫</div>
             <div class="metric-info"><div class="metric-label">Total Records</div></div>
-            <div class="metric-value">1,000</div>
+            <div class="metric-value" id="d-total-count">1,000</div>
           </div>
           <div style="display:flex;gap:6px">
             <button class="btn-export-log" style="font-size:10px;padding:3px 8px" onclick="triggerExport('CSV Export','csv')">⬇ CSV</button>
             <button class="btn-export-log" style="font-size:10px;padding:3px 8px" onclick="triggerExport('Excel Export','excel')">⬇ Excel</button>
           </div>
         </div>
-        <div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub">Peak 83.8% Jul 2025</div></div><div class="metric-value mv-red">35.4%</div></div>
+        <div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub" id="d-neg-peak">Peak 83.8% Jul 2025</div></div><div class="metric-value mv-red" id="d-neg-pct">35.4%</div></div>
         <div class="metric-card"><div class="metric-icon">⏱️</div><div class="metric-info"><div class="metric-label">Avg Resolution</div><div class="metric-sub">Mar 2026 improved to 4.1h</div></div><div class="metric-value mv-amber">5.2h</div></div>
-        <div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub">All 1,000 tickets</div></div><div class="metric-value mv-red">-$64K</div></div>
+        <div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub" id="d-rev-sub">All 1,000 tickets</div></div><div class="metric-value mv-red" id="d-net-rev">-$64K</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <input class="d-search" id="ticket-search" type="text" placeholder="🔍  Search ticket ID, agent, issue…"/>
@@ -1731,6 +1755,275 @@ function cxTab(id){
   cxTab(last);
 })();
 
+
+// ════════════════════════════════════════════════════════════════
+// PHASE 2 — Client-Side Compute Engine
+// Recomputes ALL metrics from raw ALL_TICKETS on demand
+// Triggered on page load + date range filter change
+// ════════════════════════════════════════════════════════════════
+var MONTH_ORDER=['Jan 2025','Feb 2025','Mar 2025','Apr 2025','May 2025','Jun 2025',
+  'Jul 2025','Aug 2025','Sep 2025','Oct 2025','Nov 2025','Dec 2025',
+  'Jan 2026','Feb 2026','Mar 2026','Apr 2026','May 2026','Jun 2026'];
+function _avg(a){return a.length?a.reduce(function(s,v){return s+v;},0)/a.length:0;}
+function _sum(a){return a.reduce(function(s,v){return s+v;},0);}
+function _fmtK(v){var a=Math.abs(v);if(a>=1e6)return'$'+(a/1e6).toFixed(1)+'M';if(a>=1000)return'$'+Math.round(a/1000)+'K';return'$'+Math.round(a);}
+function _set(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+
+// ── computeMonthly ────────────────────────────────────────────
+function computeMonthly(tix){
+  var m={};
+  tix.forEach(function(r){
+    var k=r[2];
+    if(!m[k])m[k]={label:k,total:0,loyalty:0,revenue:0,churn:0,resolved:0,pending:0,escalated:0,neg:0,scores:[],revs:[],sigs:0};
+    var d=m[k];d.total++;
+    if(r[3]==='Loyalty')d.loyalty++;if(r[3]==='Revenue')d.revenue++;if(r[3]==='Churn')d.churn++;
+    if(r[5]==='Resolved')d.resolved++;if(r[5]==='Pending')d.pending++;if(r[5]==='Escalated')d.escalated++;
+    if(r[7]==='Negative')d.neg++;
+    if(r[8]>0)d.scores.push(r[8]);if(r[9]!==0)d.revs.push(r[9]);
+    if(r[10]&&r[10]!=='—'&&r[10]!=='-')d.sigs++;
+  });
+  return MONTH_ORDER.filter(function(k){return m[k];}).map(function(k){
+    var d=m[k];
+    return{label:d.label,total:d.total,loyalty:d.loyalty,revenue:d.revenue,churn:d.churn,
+      resolved:d.resolved,pending:d.pending,escalated:d.escalated,
+      neg_pct:d.total>0?Math.round(d.neg/d.total*1000)/10:0,
+      avg_score:d.scores.length?Math.round(_avg(d.scores)*10)/10:0,
+      avg_rev:d.revs.length?Math.round(_avg(d.revs)*10)/10:0,signals:d.sigs};
+  });
+}
+
+// ── computeKPIs ───────────────────────────────────────────────
+function computeKPIs(tix,monthly){
+  var scores=tix.filter(function(r){return r[8]>0;}).map(function(r){return r[8];});
+  var avgCsat=scores.length?Math.round(_avg(scores)*10)/10:0;
+  var allRev=tix.filter(function(r){return r[9]!==0;}).map(function(r){return Math.abs(r[9]);});
+  var revAtRisk=_sum(allRev)/1e6;
+  var savedRev=tix.filter(function(r){return r[5]==='Resolved'&&r[9]!==0;}).map(function(r){return Math.abs(r[9]);});
+  var revSaved=_sum(savedRev)/1e6;
+  var churnPcts=monthly.map(function(m){return m.total>0?m.churn/m.total*100:0;});
+  var peakChurn=churnPcts.length?Math.max.apply(null,churnPcts):0;
+  var latestChurn=churnPcts.length?churnPcts[churnPcts.length-1]:0;
+  var churnRed=peakChurn>0?Math.round((peakChurn-latestChurn)/peakChurn*100):0;
+  var loyScores=tix.filter(function(r){return r[3]==='Loyalty'&&r[8]>0;}).map(function(r){return r[8];});
+  var loyIdx=loyScores.length?Math.round(_avg(loyScores)*10)/10:0;
+  var churnT=tix.filter(function(r){return r[3]==='Churn';});
+  var churnRes=churnT.filter(function(r){return r[5]==='Resolved';}).length;
+  var wbRate=churnT.length?Math.round(churnRes/churnT.length*1000)/10:0;
+  var sigCount=tix.filter(function(r){return r[10]&&r[10]!=='—'&&r[10]!=='-';}).length;
+  return{loyalty_index:loyIdx,revenue_at_risk:Math.round(revAtRisk*100)/100,
+    peak_churn_pct:Math.round(peakChurn*10)/10,customer_ltv:122,
+    revenue_saved:Math.round(revSaved*100)/100,winback_rate:wbRate,
+    csat_score:avgCsat,csat_ring:avgCsat/100,signals_count:sigCount,
+    churn_reduced_pct:churnRed,total_records:tix.length,refresh_date:'Live'};
+}
+
+// ── computeTeams ──────────────────────────────────────────────
+function computeTeams(tix){
+  var res={};
+  ['Loyalty','Revenue','Churn','General'].forEach(function(cat){
+    var t=tix.filter(function(r){return r[3]===cat;});
+    var sc=t.filter(function(r){return r[8]>0;}).map(function(r){return r[8];});
+    var fl=t.filter(function(r){return r[10]&&r[10]!=='—'&&r[10]!=='-';});
+    var ag={};t.forEach(function(r){ag[r[6]]=true;});
+    res[cat.toLowerCase()]={csat:sc.length?Math.round(_avg(sc)*10)/10:0,
+      tickets:t.length,flags:fl.length,agent_count:Object.keys(ag).length};
+  });
+  return res;
+}
+
+// ── computeSignals ────────────────────────────────────────────
+function computeSignals(tix){
+  var churnT=tix.filter(function(r){return r[3]==='Churn';});
+  var revT=tix.filter(function(r){return r[3]==='Revenue';});
+  var loyT=tix.filter(function(r){return r[3]==='Loyalty';});
+  var billT=tix.filter(function(r){return r[3]==='Billing';});
+  // S1
+  var churnNeg=churnT.filter(function(r){return r[7]==='Negative';}).length;
+  var churnRevAbs=_sum(churnT.map(function(r){return Math.abs(r[9]);}));
+  var churnLTV=churnT.length?Math.round(churnRevAbs/churnT.length):0;
+  // S2
+  var promo=revT.filter(function(r){return r[4]&&r[4].toLowerCase().indexOf('promo')>-1;}).length;
+  var refund=revT.filter(function(r){return r[4]&&(r[4].toLowerCase().indexOf('refund')>-1||r[4].toLowerCase().indexOf('return')>-1);}).length;
+  var revTotal=_sum(revT.map(function(r){return Math.abs(r[9]);}));
+  // S3
+  var loyNeg=loyT.filter(function(r){return r[7]==='Negative';}).length;
+  var loyScores=loyT.filter(function(r){return r[8]>0;}).map(function(r){return r[8];});
+  var loyAvg=loyScores.length?Math.round(_avg(loyScores)*10)/10:0;
+  var loyTotal=_sum(loyT.map(function(r){return Math.abs(r[9]);}));
+  // S4
+  var billTotal=_sum(billT.map(function(r){return Math.abs(r[9]);}));
+  var billAvg=billT.length?Math.round(billTotal/billT.length):0;
+  // S5
+  var agMap={};
+  tix.forEach(function(r){if(!agMap[r[6]])agMap[r[6]]={s:[],n:0};if(r[8]>0)agMap[r[6]].s.push(r[8]);agMap[r[6]].n++;});
+  var agList=Object.keys(agMap).map(function(n){var s=agMap[n].s;return{name:n,csat:s.length?Math.round(_avg(s)*10)/10:0,count:agMap[n].n};}).filter(function(a){return a.csat>0&&a.count>=5;});
+  agList.sort(function(a,b){return a.csat-b.csat;});
+  var worst=agList[0]||{name:'N/A',csat:0,count:0};
+  agList.sort(function(a,b){return b.csat-a.csat;});
+  var best=agList[0]||{name:'N/A',csat:0,count:0};
+  var allC=agList.map(function(a){return a.csat;});
+  var avgTeam=allC.length?Math.round(_avg(allC)*10)/10:85;
+  var gap=Math.round(avgTeam-worst.csat);
+  // S6
+  var churnRes=churnT.filter(function(r){return r[5]==='Resolved';}).length;
+  var churnPen=churnT.filter(function(r){return r[5]==='Pending'||r[5]==='Escalated';}).length;
+  var wbRate=churnT.length?Math.round(churnRes/churnT.length*1000)/10:0;
+  var totalAddr=_sum(tix.map(function(r){return Math.abs(r[9]);}));
+  return{
+    s1:{count:churnT.length,neg:churnNeg,avg_ltv:churnLTV,total:Math.round(churnRevAbs)},
+    s2:{count:revT.length,promo:promo,refund:refund,total:Math.round(revTotal)},
+    s3:{count:loyT.length,neg:loyNeg,avg_score:loyAvg,total:Math.round(loyTotal)},
+    s4:{count:billT.length,avg:billAvg,total:Math.round(billTotal)},
+    s5:{worst:worst,best:best,avg_csat:avgTeam,gap:gap},
+    s6:{resolved:churnRes,pending:churnPen,rate:wbRate,total:Math.round(totalAddr)}
+  };
+}
+
+// ── computeExecBrief ──────────────────────────────────────────
+function computeExecBrief(kpis,monthly,signals,tix){
+  var churnPcts=monthly.map(function(m){return m.total>0?m.churn/m.total*100:0;});
+  var peakIdx=churnPcts.indexOf(Math.max.apply(null,churnPcts.length?churnPcts:[0]));
+  var peakPct=Math.round((churnPcts[peakIdx]||0)*10)/10;
+  var peakMo=monthly[peakIdx]?monthly[peakIdx].label:'';
+  var latestPct=churnPcts.length?Math.round(churnPcts[churnPcts.length-1]*10)/10:0;
+  var churnRed=peakPct>0?Math.round((peakPct-latestPct)/peakPct*100):0;
+  var industry=71;var pts=Math.round(kpis.csat_score-industry);
+  var atRisk=tix.filter(function(r){return r[5]==='Pending'||r[5]==='Escalated';}).length;
+  var revK=Math.round(kpis.revenue_saved*1e6/1000);
+  var riskK=Math.round(kpis.revenue_at_risk*1e6/1000);
+  var now=new Date();
+  var mos=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return{churn_reduced:churnRed,peak_churn_pct:peakPct,latest_churn_pct:latestPct,
+    peak_churn_month:peakMo,rev_protected:'$'+revK+'K',rev_at_risk:'$'+riskK+'K',
+    csat_pct:Math.round(kpis.csat_score),industry_avg:industry,csat_pts:pts,
+    worst_agent:signals.s5.worst.name,worst_csat:Math.round(signals.s5.worst.csat),
+    csat_gap:signals.s5.gap,at_risk_count:atRisk,general_low_count:0,
+    today:mos[now.getMonth()]+' '+now.getFullYear()};
+}
+
+// ── applySignalCards ──────────────────────────────────────────
+function applySignalCards(sig){
+  // S1 Churn
+  var s1=document.querySelector('[data-category="churn"] .s-box');
+  if(s1)s1.innerHTML='<div class="s-item">'+sig.s1.count+' churn tickets — subscription cost & cancel intent signals</div>'
+    +'<div class="s-item">'+sig.s1.neg+' negative sentiment tickets — peak churn rate '+Math.round(sig.s1.total/Math.max(sig.s1.count,1))+'% period</div>'
+    +'<div class="s-item">Avg revenue per customer $'+sig.s1.avg_ltv+' · Total at risk: '+_fmtK(sig.s1.total)+'</div>';
+  var s1kpi=document.querySelector('[data-category="churn"] .s-sub+div+.s-sub+div[style]');
+  if(s1kpi)s1kpi.innerHTML='Churn tickets: '+sig.s1.count+'. Avg revenue lost $'+sig.s1.avg_ltv+'/customer. Total at risk: '+_fmtK(sig.s1.total)+'.';
+  var s1foot=document.querySelector('[data-category="churn"] .s-uplift');
+  if(s1foot)s1foot.textContent='↑ Retention playbook | '+_fmtK(sig.s1.avg_ltv*sig.s1.count*0.2)+' LTV recoverable';
+  // S2 Revenue
+  var s2=document.querySelector('[data-category="revenue"] .s-box');
+  if(s2)s2.innerHTML='<div class="s-item">'+sig.s2.promo+' promo/discount abuse tickets across '+sig.s2.count+' revenue cases</div>'
+    +'<div class="s-item">'+sig.s2.refund+' refund & return disputes — policy enforcement gaps identified</div>'
+    +'<div class="s-item">Total financial exposure: '+_fmtK(sig.s2.total)+'</div>';
+  var s2foot=document.querySelector('[data-category="revenue"] .s-uplift');
+  if(s2foot)s2foot.textContent='↑ Discount governance | '+_fmtK(sig.s2.total*0.03)+' savings';
+  // S3 Loyalty
+  var s3=document.querySelector('[data-category="loyalty"] .s-box');
+  if(s3)s3.innerHTML='<div class="s-item">'+sig.s3.count+' loyalty tickets — points expiry, tier downgrades, referral failures</div>'
+    +'<div class="s-item">'+sig.s3.neg+' negative sentiment tickets — programme trust erosion</div>'
+    +'<div class="s-item">Avg loyalty CSAT score: '+sig.s3.avg_score+'/100 — revenue exposure '+_fmtK(sig.s3.total)+'</div>';
+  var s3foot=document.querySelector('[data-category="loyalty"] .s-uplift');
+  if(s3foot)s3foot.textContent='↑ Retention +3% | '+_fmtK(sig.s3.total*0.04)+' LTV uplift';
+  // S4 Billing
+  var s4=document.querySelector('[data-category="billing"] .s-box');
+  if(s4)s4.innerHTML='<div class="s-item">'+sig.s4.count+' billing-related tickets detected</div>'
+    +'<div class="s-item">Avg incident cost $'+sig.s4.avg+' · Total billing exposure '+_fmtK(sig.s4.total)+'</div>'
+    +'<div class="s-item">Automate invoice reconciliation to reduce errors by 32%</div>';
+  var s4foot=document.querySelector('[data-category="billing"] .s-uplift');
+  if(s4foot)s4foot.textContent='↑ -32% billing errors | '+_fmtK(sig.s4.total*0.32)+' cost saving';
+  // S5 Agent
+  var s5=document.querySelector('[data-category="agent"] .s-box');
+  if(s5)s5.innerHTML='<div class="s-item">'+sig.s5.worst.name+' CSAT '+Math.round(sig.s5.worst.csat)+'% — '+sig.s5.gap+'pt gap vs team avg '+Math.round(sig.s5.avg_csat)+'%</div>'
+    +'<div class="s-item">'+sig.s5.worst.count+' tickets handled — escalation risk to revenue impact</div>'
+    +'<div class="s-item">Best performer: '+sig.s5.best.name+' at '+Math.round(sig.s5.best.csat)+'% CSAT</div>';
+  var s5foot=document.querySelector('[data-category="agent"] .s-uplift');
+  if(s5foot)s5foot.textContent='↑ +'+sig.s5.gap+'pt CSAT | coaching plan for '+sig.s5.worst.name;
+  // S6 Winback
+  var s6=document.querySelector('[data-category="winback"] .s-box');
+  if(s6)s6.innerHTML='<div class="s-item">'+sig.s6.resolved+' of '+(sig.s6.resolved+sig.s6.pending)+' churn tickets resolved — '+sig.s6.rate+'% win-back rate</div>'
+    +'<div class="s-item">'+sig.s6.pending+' customers still at risk — immediate outreach opportunity</div>'
+    +'<div class="s-item">Total addressable reactivation revenue: '+_fmtK(sig.s6.total)+'</div>';
+  var s6foot=document.querySelector('[data-category="winback"] .s-uplift');
+  if(s6foot)s6foot.textContent='↑ '+sig.s6.rate+'% Win-Back | '+_fmtK(sig.s6.total*0.51)+' reactivation revenue';
+}
+
+// ── applyBenchmarkStrip ───────────────────────────────────────
+function applyBenchmarkStrip(csat,industry,pts,sigCount,addr){
+  _set('bm-industry', industry+'%');
+  _set('bm-csat', csat+'%');
+  _set('bm-pts', '+'+pts+'pts above benchmark');
+  _set('bm-signals', sigCount+' Signals');
+  _set('bm-addr', 'Detected · '+addr+' addressable');
+}
+
+// ── applyDCards ───────────────────────────────────────────────
+function applyDCards(tix,monthly){
+  var neg=tix.filter(function(r){return r[7]==='Negative';}).length;
+  var negPct=tix.length?Math.round(neg/tix.length*1000)/10:0;
+  var netRev=_sum(tix.map(function(r){return r[9];}));
+  var netFmt=(netRev<0?'-':'')+_fmtK(Math.abs(netRev));
+  var peak=monthly.reduce(function(b,m){return m.neg_pct>b.neg_pct?m:b;},{neg_pct:0,label:''});
+  _set('d-total-count', tix.length.toLocaleString());
+  _set('d-neg-pct',     negPct+'%');
+  _set('d-neg-peak',    'Peak '+peak.neg_pct+'% '+peak.label);
+  _set('d-net-rev',     netFmt);
+  _set('d-rev-sub',     'All '+tix.length.toLocaleString()+' tickets');
+  _set('d-count',       'Top 25 of '+tix.length.toLocaleString());
+}
+
+// ── computeAll ────────────────────────────────────────────────
+function computeAll(tix){
+  var monthly  = computeMonthly(tix);
+  var kpis     = computeKPIs(tix, monthly);
+  var teams    = computeTeams(tix);
+  var signals  = computeSignals(tix);
+  var exec     = computeExecBrief(kpis, monthly, signals, tix);
+  // Update MONTHLY_DATA for chart drawing functions
+  MONTHLY_DATA = monthly;
+  // Apply to all DOM sections
+  applyKPIs(kpis);
+  applyTeams(teams);
+  animateCounters();
+  animateRing(kpis.csat_ring);
+  applyExecBrief(exec);
+  applySignalCards(signals);
+  // Benchmark strip
+  var industry=71;
+  var pts=Math.round(kpis.csat_score-industry);
+  var sigCount=tix.filter(function(r){return r[10]&&r[10]!=='—'&&r[10]!=='-';}).length;
+  var totalAddr=_sum(tix.map(function(r){return Math.abs(r[9]);}));
+  applyBenchmarkStrip(kpis.csat_score, industry, pts, sigCount, _fmtK(totalAddr));
+  // Section D cards
+  applyDCards(tix, monthly);
+  // Redraw charts
+  setTimeout(drawAllSparklines, 200);
+  setTimeout(function(){setCanvasDimensions();if(_chartsOpen){drawLineChart();drawRevChart();}},300);
+}
+
+// ── Date Range Filter ─────────────────────────────────────────
+function applyDateFilter(){
+  var fv=document.getElementById('dr-from')?document.getElementById('dr-from').value:'';
+  var tv=document.getElementById('dr-to')?document.getElementById('dr-to').value:'';
+  var filtered=ALL_TICKETS.filter(function(r){
+    var d=r[1];if(!d)return true;
+    if(fv&&d<fv)return false;
+    if(tv&&d>tv)return false;
+    return true;
+  });
+  _filtered=filtered;
+  renderTable();
+  computeAll(filtered);
+}
+function resetDateFilter(){
+  var f=document.getElementById('dr-from'),t=document.getElementById('dr-to');
+  if(f)f.value='';if(t)t.value='';
+  _filtered=ALL_TICKETS.slice();
+  renderTable();
+  computeAll(ALL_TICKETS);
+}
+
 // ── Sidebar Navigation ───────────────────────────
 // Map: section id → nav icon id
 var NAV_MAP = {
@@ -1867,15 +2160,9 @@ window.addEventListener('load',function(){
     AGENT_DATA   = window.AGENT_DATA   || AGENT_DATA;
     ALL_TICKETS  = window.ALL_TICKETS  || ALL_TICKETS;
     SPARK_DATA   = window.SPARK_DATA   || SPARK_DATA;
-    applyKPIs(_KPIS);
-    applyTeams(_TEAMS);
-    animateCounters();
-    animateRing(_KPIS.csat_ring);
-    applyExecBrief(_EXEC);
     _filtered = ALL_TICKETS.slice();
     renderTable();
-    setTimeout(drawAllSparklines, 200);
-    setTimeout(function(){ setCanvasDimensions(); if(_chartsOpen){ drawLineChart(); drawRevChart(); }}, 300);
+    computeAll(ALL_TICKETS);
   
 });
 window.addEventListener('resize',function(){
