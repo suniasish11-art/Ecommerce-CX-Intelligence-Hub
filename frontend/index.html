@@ -517,13 +517,13 @@ function doLogin(){
       <div class="benchmark-strip">
         <div class="bm-item"><div class="bm-val">71%</div><div class="bm-lbl">Industry Avg CSAT</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-val" style="color:var(--purple)">84%</div><div class="bm-lbl">Your CSAT Score</div></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--purple)">87.7%</div><div class="bm-lbl">Your CSAT Score</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-win">+13pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
+        <div class="bm-item"><div class="bm-win">+17pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
         <div class="bm-sep"></div>
         <div class="bm-item"><div class="bm-val" style="color:var(--green)">Top 15%</div><div class="bm-lbl">Ecommerce CX Percentile</div></div>
         <div class="bm-sep"></div>
-        <div class="bm-item"><div class="bm-val" style="color:var(--red)">6 Signals</div><div class="bm-lbl">Detected · $3.87M addressable</div></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--red)">10 Signals</div><div class="bm-lbl">Detected · $120K addressable</div></div>
       </div>
 
       <!-- Filter row -->
@@ -899,9 +899,9 @@ function doLogin(){
             <button class="btn-export-log" style="font-size:10px;padding:3px 8px" onclick="triggerExport('Excel Export','excel')">⬇ Excel</button>
           </div>
         </div>
-        <div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub">Peak 83.8% Jul 2025</div></div><div class="metric-value mv-red">59.0%</div></div>
+        <div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub">Peak 83.8% Jul 2025</div></div><div class="metric-value mv-red">35.4%</div></div>
         <div class="metric-card"><div class="metric-icon">⏱️</div><div class="metric-info"><div class="metric-label">Avg Resolution</div><div class="metric-sub">Mar 2026 improved to 4.1h</div></div><div class="metric-value mv-amber">5.2h</div></div>
-        <div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub">All 1,000 tickets</div></div><div class="metric-value mv-red">−$64.3K</div></div>
+        <div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub">All 1,000 tickets</div></div><div class="metric-value mv-red">-$64K</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
         <input class="d-search" id="ticket-search" type="text" placeholder="🔍  Search ticket ID, agent, issue…"/>
@@ -1608,7 +1608,7 @@ function doExecExport(){
   doc.text('Revenue Protected:',30,y);
   doc.setTextColor(16,185,129);
   doc.setFont('helvetica','bold');
-  doc.text('$1.24M',160,y);
+  doc.text('$56K',160,y);
   y+=7;
 
   doc.setTextColor(0,0,0);

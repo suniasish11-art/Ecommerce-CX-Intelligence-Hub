@@ -766,6 +766,84 @@ else:
     print("  WARNING: scroll spy block not matched — skipped")
 print("  Tab layout injection complete.")
 
+# ─── FIX HARDCODED VALUES ─────────────────────────────────────────
+print("  Fixing hardcoded values...")
+
+# --- 1. Benchmark Strip (Section A) ---
+# Compute real values
+bm_csat       = round(csat_score, 1)
+bm_industry   = industry_avg
+bm_pts        = round(csat_score - industry_avg)
+bm_signals    = signals_count
+bm_addressable = fmt_k(revenue_at_risk * 1_000_000)   # total addressable revenue
+
+old_benchmark = """      <!-- Benchmark strip (GTM) -->
+      <div class="benchmark-strip">
+        <div class="bm-item"><div class="bm-val">71%</div><div class="bm-lbl">Industry Avg CSAT</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--purple)">84%</div><div class="bm-lbl">Your CSAT Score</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-win">+13pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--green)">Top 15%</div><div class="bm-lbl">Ecommerce CX Percentile</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--red)">6 Signals</div><div class="bm-lbl">Detected · $3.87M addressable</div></div>
+      </div>"""
+
+new_benchmark = f"""      <!-- Benchmark strip (GTM) -->
+      <div class="benchmark-strip">
+        <div class="bm-item"><div class="bm-val">{bm_industry}%</div><div class="bm-lbl">Industry Avg CSAT</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--purple)">{bm_csat}%</div><div class="bm-lbl">Your CSAT Score</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-win">+{bm_pts}pts above benchmark</div><div class="bm-lbl">vs industry average</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--green)">Top 15%</div><div class="bm-lbl">Ecommerce CX Percentile</div></div>
+        <div class="bm-sep"></div>
+        <div class="bm-item"><div class="bm-val" style="color:var(--red)">{bm_signals} Signals</div><div class="bm-lbl">Detected · {bm_addressable} addressable</div></div>
+      </div>"""
+
+if old_benchmark in html:
+    html = html.replace(old_benchmark, new_benchmark)
+    print(f"  Benchmark strip: CSAT {bm_csat}% | +{bm_pts}pts | {bm_signals} signals | {bm_addressable}")
+else:
+    print("  WARNING: Benchmark strip pattern not matched")
+
+# --- 2. Section D Summary Cards ---
+# Compute real values from ticket data
+neg_tickets   = [r for r in ALL_TICKETS if r[7] == 'Negative']
+neg_pct       = round(len(neg_tickets) / len(ALL_TICKETS) * 100, 1) if ALL_TICKETS else 0
+net_rev       = sum(r[9] for r in ALL_TICKETS if r[9] != 0)
+net_rev_fmt   = f'-{fmt_k(abs(net_rev))}' if net_rev < 0 else fmt_k(net_rev)
+
+# Peak neg sentiment month from monthly data
+peak_neg_month = max(MONTHLY_DATA, key=lambda m: m['neg_pct']) if MONTHLY_DATA else None
+peak_neg_str  = f"Peak {peak_neg_month['neg_pct']}% {peak_neg_month['label']}" if peak_neg_month else ''
+
+html = html.replace(
+    f'<div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub">Peak 83.8% Jul 2025</div></div><div class="metric-value mv-red">59.0%</div></div>',
+    f'<div class="metric-card"><div class="metric-icon">😟</div><div class="metric-info"><div class="metric-label">Neg Sentiment</div><div class="metric-sub">{peak_neg_str}</div></div><div class="metric-value mv-red">{neg_pct}%</div></div>'
+)
+html = html.replace(
+    '<div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub">All 1,000 tickets</div></div><div class="metric-value mv-red">−$64.3K</div></div>',
+    f'<div class="metric-card"><div class="metric-icon">💸</div><div class="metric-info"><div class="metric-label">Net Rev Impact</div><div class="metric-sub">All {len(ALL_TICKETS):,} tickets</div></div><div class="metric-value mv-red">{net_rev_fmt}</div></div>'
+)
+html = html.replace(
+    '<div class="metric-value">1,000</div>',
+    f'<div class="metric-value">{len(ALL_TICKETS):,}</div>'
+)
+print(f"  Section D cards: Neg Sentiment {neg_pct}% | Net Rev {net_rev_fmt}")
+
+# --- 3. PDF Export hardcoded values ---
+# Replace stale values in PDF/copy export templates
+html = html.replace('"$3.87M"', f'"{bm_addressable}"')
+html = html.replace('"$1.24M"', f'"{rev_protected_fmt}"')
+html = html.replace("'$3.87M'", f"'{bm_addressable}'")
+html = html.replace("'$1.24M'", f"'{rev_protected_fmt}'")
+print("  PDF export values updated.")
+
+print("  All hardcoded values fixed.")
+
 # Write static output
 import os
 os.makedirs('frontend', exist_ok=True)
