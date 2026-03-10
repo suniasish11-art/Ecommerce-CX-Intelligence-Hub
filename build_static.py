@@ -615,6 +615,51 @@ new_roi_cfg = f"var ROI_CFG={{1:{{ltv:{real_ltv},uplift:{real_churn_uplift},lbl:
 html = html.replace(old_roi_cfg, new_roi_cfg)
 print(f"  ROI_CFG updated: LTV=${real_ltv} | Churn uplift={real_churn_uplift} | WinBack={real_winback_rate}")
 
+# --- Inject Login Gate ---
+login_html = """
+<style>
+#login-gate{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#1e1b4b 0%,#5b21b6 60%,#7c3aed 100%);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}
+#login-box{background:#fff;border-radius:20px;padding:48px 40px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,0.35);text-align:center}
+#login-box .logo{font-size:2rem;margin-bottom:8px}
+#login-box h2{font-size:1.3rem;font-weight:700;color:#1e1b4b;margin-bottom:4px}
+#login-box p{font-size:.85rem;color:#6b7280;margin-bottom:28px}
+#login-box input{width:100%;padding:12px 16px;border:2px solid #e5e7eb;border-radius:10px;font-size:1rem;outline:none;transition:border .2s;margin-bottom:16px}
+#login-box input:focus{border-color:#7c3aed}
+#login-box button{width:100%;padding:13px;background:linear-gradient(90deg,#7c3aed,#ec4899);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;letter-spacing:.3px}
+#login-box button:hover{opacity:.9}
+#login-err{color:#f43f5e;font-size:.85rem;margin-top:10px;display:none}
+</style>
+<div id="login-gate">
+  <div id="login-box">
+    <div class="logo">🎯</div>
+    <h2>Navedas CX Hub</h2>
+    <p>Enter your password to access the dashboard</p>
+    <input type="password" id="login-pw" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-err">Incorrect password. Please try again.</div>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('cx_auth')==='1'){
+    document.getElementById('login-gate').style.display='none';
+  }
+})();
+function doLogin(){
+  var pw=document.getElementById('login-pw').value;
+  if(pw==='Navedas@2026'){
+    sessionStorage.setItem('cx_auth','1');
+    document.getElementById('login-gate').style.display='none';
+  } else {
+    document.getElementById('login-err').style.display='block';
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
+  }
+}
+</script>
+"""
+html = html.replace('<body', login_html + '<body', 1)
+
 # Write static output
 import os
 os.makedirs('frontend', exist_ok=True)
