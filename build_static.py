@@ -811,7 +811,7 @@ else:
 
 # --- 2. Section D Summary Cards ---
 # Compute real values from ticket data
-neg_tickets   = [r for r in ALL_TICKETS if r[7] == 'Negative']
+neg_tickets   = [r for r in ALL_TICKETS if r[7] in ('Negative', 'Very Negative')]
 neg_pct       = round(len(neg_tickets) / len(ALL_TICKETS) * 100, 1) if ALL_TICKETS else 0
 net_rev       = sum(r[9] for r in ALL_TICKETS if r[9] != 0)
 net_rev_fmt   = f'-{fmt_k(abs(net_rev))}' if net_rev < 0 else fmt_k(net_rev)
@@ -843,6 +843,59 @@ html = html.replace("'$1.24M'", f"'{rev_protected_fmt}'")
 print("  PDF export values updated.")
 
 print("  All hardcoded values fixed.")
+
+# ─── INJECT KPI ELEMENT IDs (so applyKPIs can update them) ───────
+# Primary KPI cards (Overview section)
+html = html.replace(
+    'data-count="77" data-suffix="%">77%</div>',
+    'id="kpi-resolution" data-count="77" data-suffix="%">77%</div>')
+html = html.replace(
+    'data-count="3.87" data-prefix="$" data-suffix="M">$3.87M</div>',
+    'id="kpi-revenue" data-count="3.87" data-prefix="$" data-suffix="M">$3.87M</div>')
+html = html.replace(
+    'data-count="6.1" data-suffix="%">6.1%</div>',
+    'id="kpi-churn" data-count="6.1" data-suffix="%">6.1%</div>')
+# Secondary KPI metrics
+html = html.replace(
+    '<div class="sec-name">Customer LTV (Mar 2026)</div></div></div>\n          <div class="sec-val amber" data-count="334" data-prefix="$">$334</div>',
+    '<div class="sec-name">Signals Detected</div></div></div>\n          <div class="sec-val amber" id="kpi-signals" data-count="334">334</div>')
+html = html.replace(
+    'data-count="1.24" data-prefix="$" data-suffix="M">$1.24M</div>',
+    'id="kpi-rev-saved" data-count="1.24" data-prefix="$" data-suffix="M">$1.24M</div>')
+html = html.replace(
+    'data-count="21" data-suffix="%">21%</div>',
+    'id="kpi-winback" data-count="21" data-suffix="%">21%</div>')
+html = html.replace(
+    'data-count="84" data-suffix="%">84%</div>',
+    'id="kpi-csat" data-count="84" data-suffix="%">84%</div>')
+print("  KPI element IDs injected.")
+
+# Patch applyKPIs in template to use correct IDs matching injected elements
+old_apply_kpis = """function applyKPIs(k){
+  var map={
+    'kpi-loyalty':{count:k.loyalty_index,suffix:'%'},
+    'kpi-revenue':{count:k.revenue_at_risk,prefix:'$',suffix:'M'},
+    'kpi-churn':{count:k.peak_churn_pct,suffix:'%'},
+    'kpi-ltv':{count:k.customer_ltv,prefix:'$'},
+    'kpi-rev-saved':{count:k.revenue_saved,prefix:'$',suffix:'M'},
+    'kpi-winback':{count:k.winback_rate,suffix:'%'},
+    'kpi-csat':{count:k.csat_score,suffix:'%'}
+  };"""
+new_apply_kpis = """function applyKPIs(k){
+  var map={
+    'kpi-resolution':{count:k.resolution_rate,suffix:'%'},
+    'kpi-revenue':{count:k.revenue_at_risk,prefix:'$',suffix:'M'},
+    'kpi-churn':{count:k.peak_churn_pct,suffix:'%'},
+    'kpi-signals':{count:k.signals_count},
+    'kpi-rev-saved':{count:k.revenue_saved,prefix:'$',suffix:'M'},
+    'kpi-winback':{count:k.winback_rate,suffix:'%'},
+    'kpi-csat':{count:k.csat_score,suffix:'%'}
+  };"""
+if old_apply_kpis in html:
+    html = html.replace(old_apply_kpis, new_apply_kpis)
+    print("  applyKPIs patched: kpi-resolution + kpi-signals mapped")
+else:
+    print("  WARNING: applyKPIs pattern not matched")
 
 # ─── PHASE 2: CLIENT-SIDE COMPUTE ENGINE ──────────────────────────
 print("  Injecting Phase 2 compute engine...")
@@ -904,7 +957,7 @@ function computeMonthly(tix){
     var d=m[k];d.total++;
     if(r[3]==='Loyalty')d.loyalty++;if(r[3]==='Revenue')d.revenue++;if(r[3]==='Churn')d.churn++;
     if(r[5]==='Resolved')d.resolved++;if(r[5]==='Pending')d.pending++;if(r[5]==='Escalated')d.escalated++;
-    if(r[7]==='Negative')d.neg++;
+    if(r[7]==='Negative'||r[7]==='Very Negative')d.neg++;
     if(r[8]>0)d.scores.push(r[8]);if(r[9]!==0)d.revs.push(r[9]);
     if(r[10]&&r[10]!=='\u2014'&&r[10]!=='-')d.sigs++;
   });
@@ -936,8 +989,9 @@ function computeKPIs(tix,monthly){
   var churnRes=churnT.filter(function(r){return r[5]==='Resolved';}).length;
   var wbRate=churnT.length?Math.round(churnRes/churnT.length*1000)/10:0;
   var sigCount=tix.filter(function(r){return r[10]&&r[10]!=='\u2014'&&r[10]!=='-';}).length;
+  var resRate=tix.length?Math.round(tix.filter(function(r){return r[5]==='Resolved';}).length/tix.length*1000)/10:0;
   return{loyalty_index:loyIdx,revenue_at_risk:Math.round(revAtRisk*100)/100,
-    peak_churn_pct:Math.round(peakChurn*10)/10,customer_ltv:122,
+    peak_churn_pct:Math.round(peakChurn*10)/10,customer_ltv:122,resolution_rate:resRate,
     revenue_saved:Math.round(revSaved*100)/100,winback_rate:wbRate,
     csat_score:avgCsat,csat_ring:avgCsat/100,signals_count:sigCount,
     churn_reduced_pct:churnRed,total_records:tix.length,refresh_date:'Live'};
@@ -1086,7 +1140,7 @@ function applyBenchmarkStrip(csat,industry,pts,sigCount,addr){
 
 // ── applyDCards ───────────────────────────────────────────────
 function applyDCards(tix,monthly){
-  var neg=tix.filter(function(r){return r[7]==='Negative';}).length;
+  var neg=tix.filter(function(r){return r[7]==='Negative'||r[7]==='Very Negative';}).length;
   var negPct=tix.length?Math.round(neg/tix.length*1000)/10:0;
   var netRev=_sum(tix.map(function(r){return r[9];}));
   var netFmt=(netRev<0?'-':'')+_fmtK(Math.abs(netRev));
