@@ -757,11 +757,13 @@ if old_navTo in html:
 else:
     print("  WARNING: navTo pattern not matched — scroll behaviour unchanged")
 
-# 5. Disable scroll spy (irrelevant with tab layout)
-html = html.replace(
-    "window.addEventListener('scroll', function() {",
-    "// scroll spy disabled (tab layout active)\n  // window.addEventListener('scroll', function() {"
-)
+# 5. Disable scroll spy (irrelevant with tab layout) — replace full block to avoid syntax errors
+scroll_spy_block = "window.addEventListener('scroll', function() {\n  if (_scrollSpy) clearTimeout(_scrollSpy);\n  _scrollSpy = setTimeout(updateScrollSpy, 60);\n}, { passive: true });"
+if scroll_spy_block in html:
+    html = html.replace(scroll_spy_block, "// scroll spy disabled (tab layout active)")
+    print("  Scroll spy disabled cleanly")
+else:
+    print("  WARNING: scroll spy block not matched — skipped")
 print("  Tab layout injection complete.")
 
 # Write static output

@@ -1812,10 +1812,6 @@ function updateScrollSpy() {
   });
 }
 // scroll spy disabled (tab layout active)
-  // window.addEventListener('scroll', function() {
-  if (_scrollSpy) clearTimeout(_scrollSpy);
-  _scrollSpy = setTimeout(updateScrollSpy, 60);
-}, { passive: true });
 
 // ── Init ─────────────────────────────────────────
 function applyKPIs(k){
