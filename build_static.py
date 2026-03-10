@@ -6,6 +6,11 @@ import pandas as pd
 import json
 import re
 import os
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 print("Reading Excel data...")
 xl = 'navedas_cx_1000 (1).xlsx'

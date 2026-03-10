@@ -1,2 +1,4 @@
-supabase>=2.0.0
+supabase==2.3.4
+httpx==0.24.1
+httpcore==0.17.3
 PyJWT>=2.8.0
