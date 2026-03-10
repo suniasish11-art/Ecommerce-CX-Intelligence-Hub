@@ -325,6 +325,35 @@ tr.exp-row>td{background:#fafbff!important;cursor:default;padding:0;border-botto
 @media(max-width:1100px){.team-grid{grid-template-columns:1fr 1fr}.signal-grid{grid-template-columns:1fr 1fr}.exec-grid{grid-template-columns:1fr 1fr}.secondary-metrics{grid-template-columns:1fr 1fr}}
 @media(max-width:900px){.chart-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr}.sidebar{display:none}.main{margin-left:0}.session-warn,.footer-bar{left:0}.audit-pill{right:8px}}
 @media(max-width:600px){.secondary-metrics,.team-grid,.signal-grid,.exec-grid,.metric-grid-4{grid-template-columns:1fr}.benchmark-strip{flex-direction:column;gap:8px}.bm-sep{display:none}}
+
+/* ══ CX TAB BAR ═══════════════════════════════════════════════ */
+.cx-tab-bar{
+  display:flex;align-items:stretch;background:#fff;
+  border-bottom:2px solid var(--border);
+  padding:0 20px;position:sticky;top:88px;z-index:98;
+  box-shadow:0 2px 10px rgba(124,58,237,.07);flex-shrink:0;
+  overflow-x:auto;scrollbar-width:none;
+}
+.cx-tab-bar::-webkit-scrollbar{display:none}
+.cx-tab{
+  display:flex;align-items:center;gap:6px;padding:12px 18px;
+  font-size:12.5px;font-weight:500;color:var(--text-mid);
+  border:none;background:transparent;cursor:pointer;
+  border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:color .15s,background .15s;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;outline:none;flex-shrink:0;
+}
+.cx-tab:hover{color:var(--purple);background:var(--purple-light);border-radius:8px 8px 0 0}
+.cx-tab.cx-active{color:var(--purple);font-weight:700;border-bottom:3px solid var(--purple)}
+.cx-tab .cx-cnt{
+  background:var(--purple-light);color:var(--purple);
+  font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;line-height:1.6;
+}
+.cx-tab.cx-active .cx-cnt{background:var(--purple);color:#fff}
+/* Hide all top-level sections; only active is visible */
+.content > .section-card{display:none!important}
+.content > .section-card.cx-show{display:block!important}
+
 </style>
 </head>
 
@@ -461,6 +490,13 @@ function doLogin(){
     </div>
   </div>
 
+  <div class="cx-tab-bar">
+    <button class="cx-tab cx-active" id="cxtab-a" onclick="cxTab('a')">📊 Overview <span class="cx-cnt">KPIs</span></button>
+    <button class="cx-tab" id="cxtab-b" onclick="cxTab('b')">👥 Agent Performance <span class="cx-cnt">12</span></button>
+    <button class="cx-tab" id="cxtab-c" onclick="cxTab('c')">📡 Signal Intelligence <span class="cx-cnt">6</span></button>
+    <button class="cx-tab" id="cxtab-d" onclick="cxTab('d')">🎫 Ticket Intelligence <span class="cx-cnt">1K</span></button>
+    <button class="cx-tab" id="cxtab-e" onclick="cxTab('e')">📋 Executive Briefing</button>
+  </div>
   <div class="content">
 
     <!-- ══════════════════ SECTION A ══════════════════ -->
@@ -1670,6 +1706,31 @@ document.getElementById('a-reset').addEventListener('click',function(){
 });
 document.querySelectorAll('#section-a .fc[data-issue]').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');});});
 
+
+// ── CX Tab System ──────────────────────────────────────────────
+var CX_TAB_MAP = {a:'section-a',b:'section-b',c:'section-c',d:'section-d',e:'section-e'};
+function cxTab(id){
+  // Hide all sections
+  document.querySelectorAll('.content>.section-card').forEach(function(s){
+    s.classList.remove('cx-show');
+  });
+  // Show target section
+  var sec = document.getElementById(CX_TAB_MAP[id]);
+  if(sec) sec.classList.add('cx-show');
+  // Update tab button states
+  document.querySelectorAll('.cx-tab').forEach(function(t){t.classList.remove('cx-active');});
+  var btn = document.getElementById('cxtab-'+id);
+  if(btn) btn.classList.add('cx-active');
+  // Scroll to top of content
+  window.scrollTo({top:0});
+  sessionStorage.setItem('cx_active_tab', id);
+}
+// Restore last active tab on load
+document.addEventListener('DOMContentLoaded',function(){
+  var last = sessionStorage.getItem('cx_active_tab') || 'a';
+  cxTab(last);
+});
+
 // ── Sidebar Navigation ───────────────────────────
 // Map: section id → nav icon id
 var NAV_MAP = {
@@ -1691,12 +1752,8 @@ function setActiveNav(iconEl) {
 
 // Smooth scroll to section and mark active
 function navTo(sectionId, iconEl) {
-  var section = document.getElementById(sectionId);
-  if (!section) return;
-  // Offset for sticky topbar (52px) + SOC banner (~34px)
-  var offset = 52 + 34 + 8;
-  var top = section.getBoundingClientRect().top + window.pageYOffset - offset;
-  window.scrollTo({ top: top, behavior: 'smooth' });
+  var secTabMap={'section-a':'a','section-b':'b','section-c':'c','section-d':'d','section-e':'e'};
+  if(secTabMap[sectionId]) cxTab(secTabMap[sectionId]);
   setActiveNav(iconEl || document.getElementById(NAV_MAP[sectionId]));
   logAudit('NAV', sectionId);
 }
@@ -1754,7 +1811,8 @@ function updateScrollSpy() {
     if (el) el.classList.toggle('active', id === navId);
   });
 }
-window.addEventListener('scroll', function() {
+// scroll spy disabled (tab layout active)
+  // window.addEventListener('scroll', function() {
   if (_scrollSpy) clearTimeout(_scrollSpy);
   _scrollSpy = setTimeout(updateScrollSpy, 60);
 }, { passive: true });

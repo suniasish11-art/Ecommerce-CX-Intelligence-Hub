@@ -660,6 +660,110 @@ function doLogin(){
 """
 html = html.replace('<body', login_html + '<body', 1)
 
+# ─── TAB LAYOUT INJECTION ────────────────────────────────────────
+print("  Injecting tab layout...")
+
+# 1. Tab CSS — hide all sections by default, show only active
+tab_css = """
+/* ══ CX TAB BAR ═══════════════════════════════════════════════ */
+.cx-tab-bar{
+  display:flex;align-items:stretch;background:#fff;
+  border-bottom:2px solid var(--border);
+  padding:0 20px;position:sticky;top:88px;z-index:98;
+  box-shadow:0 2px 10px rgba(124,58,237,.07);flex-shrink:0;
+  overflow-x:auto;scrollbar-width:none;
+}
+.cx-tab-bar::-webkit-scrollbar{display:none}
+.cx-tab{
+  display:flex;align-items:center;gap:6px;padding:12px 18px;
+  font-size:12.5px;font-weight:500;color:var(--text-mid);
+  border:none;background:transparent;cursor:pointer;
+  border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:color .15s,background .15s;white-space:nowrap;
+  font-family:'DM Sans',sans-serif;outline:none;flex-shrink:0;
+}
+.cx-tab:hover{color:var(--purple);background:var(--purple-light);border-radius:8px 8px 0 0}
+.cx-tab.cx-active{color:var(--purple);font-weight:700;border-bottom:3px solid var(--purple)}
+.cx-tab .cx-cnt{
+  background:var(--purple-light);color:var(--purple);
+  font-size:10px;font-weight:700;padding:1px 6px;border-radius:7px;line-height:1.6;
+}
+.cx-tab.cx-active .cx-cnt{background:var(--purple);color:#fff}
+/* Hide all top-level sections; only active is visible */
+.content > .section-card{display:none!important}
+.content > .section-card.cx-show{display:block!important}
+"""
+html = html.replace('</style>', tab_css + '\n</style>', 1)
+
+# 2. Inject tab bar HTML between soc-banner and content div
+tab_bar_html = """  <div class="cx-tab-bar">
+    <button class="cx-tab cx-active" id="cxtab-a" onclick="cxTab('a')">📊 Overview <span class="cx-cnt">KPIs</span></button>
+    <button class="cx-tab" id="cxtab-b" onclick="cxTab('b')">👥 Agent Performance <span class="cx-cnt">12</span></button>
+    <button class="cx-tab" id="cxtab-c" onclick="cxTab('c')">📡 Signal Intelligence <span class="cx-cnt">6</span></button>
+    <button class="cx-tab" id="cxtab-d" onclick="cxTab('d')">🎫 Ticket Intelligence <span class="cx-cnt">1K</span></button>
+    <button class="cx-tab" id="cxtab-e" onclick="cxTab('e')">📋 Executive Briefing</button>
+  </div>
+"""
+html = html.replace('  <div class="content">', tab_bar_html + '  <div class="content">', 1)
+
+# 3. Tab switching JS
+tab_js = """
+// ── CX Tab System ──────────────────────────────────────────────
+var CX_TAB_MAP = {a:'section-a',b:'section-b',c:'section-c',d:'section-d',e:'section-e'};
+function cxTab(id){
+  // Hide all sections
+  document.querySelectorAll('.content>.section-card').forEach(function(s){
+    s.classList.remove('cx-show');
+  });
+  // Show target section
+  var sec = document.getElementById(CX_TAB_MAP[id]);
+  if(sec) sec.classList.add('cx-show');
+  // Update tab button states
+  document.querySelectorAll('.cx-tab').forEach(function(t){t.classList.remove('cx-active');});
+  var btn = document.getElementById('cxtab-'+id);
+  if(btn) btn.classList.add('cx-active');
+  // Scroll to top of content
+  window.scrollTo({top:0});
+  sessionStorage.setItem('cx_active_tab', id);
+}
+// Restore last active tab on load
+document.addEventListener('DOMContentLoaded',function(){
+  var last = sessionStorage.getItem('cx_active_tab') || 'a';
+  cxTab(last);
+});
+"""
+html = html.replace('// ── Sidebar Navigation', tab_js + '\n// ── Sidebar Navigation')
+
+# 4. Update navTo to switch tabs instead of scrolling
+old_navTo = """function navTo(sectionId, iconEl) {
+  var section = document.getElementById(sectionId);
+  if (!section) return;
+  // Offset for sticky topbar (52px) + SOC banner (~34px)
+  var offset = 52 + 34 + 8;
+  var top = section.getBoundingClientRect().top + window.pageYOffset - offset;
+  window.scrollTo({ top: top, behavior: 'smooth' });
+  setActiveNav(iconEl || document.getElementById(NAV_MAP[sectionId]));
+  logAudit('NAV', sectionId);
+}"""
+new_navTo = """function navTo(sectionId, iconEl) {
+  var secTabMap={'section-a':'a','section-b':'b','section-c':'c','section-d':'d','section-e':'e'};
+  if(secTabMap[sectionId]) cxTab(secTabMap[sectionId]);
+  setActiveNav(iconEl || document.getElementById(NAV_MAP[sectionId]));
+  logAudit('NAV', sectionId);
+}"""
+if old_navTo in html:
+    html = html.replace(old_navTo, new_navTo)
+    print("  navTo updated for tab switching")
+else:
+    print("  WARNING: navTo pattern not matched — scroll behaviour unchanged")
+
+# 5. Disable scroll spy (irrelevant with tab layout)
+html = html.replace(
+    "window.addEventListener('scroll', function() {",
+    "// scroll spy disabled (tab layout active)\n  // window.addEventListener('scroll', function() {"
+)
+print("  Tab layout injection complete.")
+
 # Write static output
 import os
 os.makedirs('frontend', exist_ok=True)
