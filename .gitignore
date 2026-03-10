@@ -43,3 +43,9 @@ package-lock.json
 venv/
 env/
 ENV/
+
+.vercel
+.env*.local
+
+# Local Netlify folder
+.netlify

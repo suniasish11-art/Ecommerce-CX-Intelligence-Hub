@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Tab Layout Preview — Navedas CX Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --purple:#7c3aed;--purple-deep:#5b21b6;--purple-light:#ede9fe;--purple-mid:#a78bfa;--purple-border:#e9d5ff;
+  --pink:#ec4899;--pink-light:#fce7f3;
+  --green:#10b981;--green-light:#d1fae5;
+  --red:#f43f5e;--red-light:#fff1f2;
+  --amber:#f59e0b;--amber-light:#fef3c7;
+  --blue:#3b82f6;--blue-light:#eff6ff;
+  --text-dark:#1e1b4b;--text-mid:#6b7280;--text-light:#9ca3af;
+  --bg:#f8f7ff;--white:#fff;--border:#e5e7eb;--sidebar:#1e1b4b;
+  --shadow:0 4px 24px rgba(124,58,237,0.08);
+  --sidebar-w:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;color:var(--text-dark);background:var(--bg);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── Preview Banner ── */
+.preview-banner{
+  background:linear-gradient(90deg,#d97706,#f59e0b,#d97706);
+  color:#fff;font-size:.78rem;font-weight:700;text-align:center;
+  padding:6px;letter-spacing:1.5px;text-transform:uppercase;
+  position:relative;z-index:1000;flex-shrink:0;
+}
+
+/* ── Topbar ── */
+.topbar{
+  height:56px;background:var(--white);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px 0 calc(var(--sidebar-w) + 20px);
+  gap:12px;flex-shrink:0;box-shadow:0 1px 8px rgba(124,58,237,0.06);
+  position:relative;z-index:100;
+}
+.topbar-logo{
+  width:32px;height:32px;background:linear-gradient(135deg,var(--purple),var(--pink));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+}
+.topbar-title{font-size:.95rem;font-weight:700;color:var(--text-dark)}
+.topbar-sub{font-size:.75rem;color:var(--text-mid);margin-left:4px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.topbar-badge{
+  background:var(--green-light);color:var(--green);
+  font-size:.7rem;font-weight:600;padding:3px 8px;border-radius:20px;
+}
+.topbar-role{
+  background:var(--purple-light);color:var(--purple);
+  font-size:.75rem;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer;
+}
+.topbar-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:.75rem;font-weight:700;
+}
+
+/* ── Layout Shell ── */
+.shell{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:var(--sidebar-w);background:var(--sidebar);
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 0;gap:4px;flex-shrink:0;position:absolute;top:0;bottom:0;left:0;z-index:50;
+}
+.sidebar-item{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;cursor:pointer;transition:background .15s;position:relative;
+}
+.sidebar-item:hover,.sidebar-item.active{background:rgba(124,58,237,0.5)}
+.sidebar-item .tip{
+  position:absolute;left:52px;background:var(--text-dark);color:#fff;
+  font-size:.72rem;font-weight:600;padding:4px 8px;border-radius:6px;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;
+}
+.sidebar-item:hover .tip{opacity:1}
+.sidebar-divider{width:32px;height:1px;background:rgba(255,255,255,0.1);margin:4px 0}
+
+/* ── Main content ── */
+.main{flex:1;margin-left:var(--sidebar-w);display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Tab Bar ── */
+.tab-bar{
+  background:var(--white);border-bottom:2px solid var(--border);
+  display:flex;align-items:stretch;padding:0 24px;
+  flex-shrink:0;gap:0;
+}
+.tab-btn{
+  display:flex;align-items:center;gap:8px;padding:14px 20px;
+  font-size:.85rem;font-weight:500;color:var(--text-mid);
+  cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;
+  transition:all .18s;white-space:nowrap;user-select:none;
+}
+.tab-btn:hover{color:var(--purple);background:var(--purple-light);border-radius:8px 8px 0 0}
+.tab-btn.active{color:var(--purple);font-weight:700;border-bottom:3px solid var(--purple)}
+.tab-btn .tab-icon{font-size:1rem}
+.tab-btn .tab-count{
+  background:var(--purple-light);color:var(--purple);
+  font-size:.65rem;font-weight:700;padding:2px 6px;border-radius:10px;
+}
+.tab-btn.active .tab-count{background:var(--purple);color:#fff}
+
+/* ── Tab Content ── */
+.tab-content{flex:1;overflow-y:auto;padding:24px;display:none;animation:fadeIn .2s ease}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── KPI Cards ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.kpi-card{
+  background:var(--white);border-radius:14px;padding:20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);position:relative;overflow:hidden;
+}
+.kpi-card::before{
+  content:'';position:absolute;top:0;right:0;width:80px;height:80px;
+  border-radius:0 14px 0 80px;opacity:.08;
+}
+.kpi-card.purple::before{background:var(--purple)}
+.kpi-card.pink::before{background:var(--pink)}
+.kpi-card.green::before{background:var(--green)}
+.kpi-card.red::before{background:var(--red)}
+.kpi-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-mid);margin-bottom:6px}
+.kpi-value{font-size:2rem;font-weight:800;line-height:1}
+.kpi-card.purple .kpi-value{color:var(--purple)}
+.kpi-card.pink .kpi-value{color:var(--pink)}
+.kpi-card.green .kpi-value{color:var(--green)}
+.kpi-card.red .kpi-value{color:var(--red)}
+.kpi-sub{font-size:.75rem;color:var(--text-mid);margin-top:6px}
+.kpi-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:.68rem;font-weight:600;padding:2px 7px;border-radius:8px;margin-top:8px;
+}
+.kpi-badge.up{background:var(--green-light);color:var(--green)}
+.kpi-badge.down{background:var(--red-light);color:var(--red)}
+
+/* ── Charts Row ── */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{
+  background:var(--white);border-radius:14px;padding:20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+}
+.chart-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.chart-card-title{font-size:.9rem;font-weight:700;color:var(--text-dark)}
+.chart-card-sub{font-size:.72rem;color:var(--text-mid);margin-top:2px}
+.chart-placeholder{
+  height:200px;border-radius:10px;
+  background:linear-gradient(135deg,var(--purple-light) 0%,var(--pink-light) 100%);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+}
+.chart-placeholder svg{width:100%;height:100%;position:absolute;inset:0}
+
+/* ── Team Cards ── */
+.team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.team-card{
+  background:var(--white);border-radius:14px;padding:20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+}
+.team-card-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.team-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+}
+.team-icon.purple{background:var(--purple-light)}
+.team-icon.pink{background:var(--pink-light)}
+.team-icon.green{background:var(--green-light)}
+.team-icon.amber{background:var(--amber-light)}
+.team-name{font-size:.9rem;font-weight:700;color:var(--text-dark)}
+.team-tickets{font-size:.75rem;color:var(--text-mid)}
+.agent-list{display:flex;flex-direction:column;gap:8px}
+.agent-row{display:flex;align-items:center;justify-content:space-between}
+.agent-name{font-size:.82rem;font-weight:500}
+.agent-bar-wrap{flex:1;height:6px;background:#f3f4f6;border-radius:3px;margin:0 10px}
+.agent-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--pink))}
+.agent-pct{font-size:.78rem;font-weight:700;color:var(--purple)}
+
+/* ── Signal Cards ── */
+.signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.signal-card{
+  background:var(--white);border-radius:14px;padding:20px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+}
+.signal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.signal-icon-wrap{
+  width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+}
+.signal-tag{font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.signal-title{font-size:.9rem;font-weight:700;margin-bottom:4px}
+.signal-desc{font-size:.78rem;color:var(--text-mid);line-height:1.5;margin-bottom:12px}
+.signal-metrics{display:flex;gap:12px;margin-bottom:14px}
+.signal-metric{background:var(--bg);border-radius:8px;padding:8px 12px;text-align:center;flex:1}
+.signal-metric-val{font-size:1.1rem;font-weight:800;color:var(--purple)}
+.signal-metric-lbl{font-size:.65rem;color:var(--text-mid);margin-top:2px}
+.signal-btn{
+  width:100%;padding:8px;border:1.5px solid var(--purple);background:transparent;
+  color:var(--purple);border-radius:8px;font-size:.78rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+}
+.signal-btn:hover{background:var(--purple);color:#fff}
+
+/* ── Ticket Table ── */
+.filter-bar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+.filter-btn{
+  padding:7px 14px;border-radius:8px;font-size:.78rem;font-weight:600;
+  border:1.5px solid var(--border);background:var(--white);
+  color:var(--text-mid);cursor:pointer;transition:all .15s;
+}
+.filter-btn.active,.filter-btn:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+.search-input{
+  margin-left:auto;padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);
+  font-size:.82rem;outline:none;font-family:inherit;color:var(--text-dark);background:var(--white);
+  min-width:200px;
+}
+.search-input:focus{border-color:var(--purple)}
+.ticket-table{width:100%;background:var(--white);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+.ticket-table th{
+  background:var(--purple-light);color:var(--purple);
+  font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:10px 14px;text-align:left;
+}
+.ticket-table td{
+  padding:11px 14px;font-size:.82rem;border-bottom:1px solid var(--border);
+  color:var(--text-dark);
+}
+.ticket-table tr:last-child td{border-bottom:none}
+.ticket-table tr:hover td{background:#faf9ff}
+.status-pill{
+  display:inline-block;padding:2px 8px;border-radius:8px;
+  font-size:.68rem;font-weight:600;
+}
+.status-pill.resolved{background:var(--green-light);color:var(--green)}
+.status-pill.pending{background:var(--amber-light);color:#92400e}
+.status-pill.escalated{background:var(--red-light);color:var(--red)}
+.score-dot{
+  display:inline-flex;align-items:center;gap:5px;font-weight:600;
+}
+.score-dot::before{content:'';width:8px;height:8px;border-radius:50%;display:inline-block}
+.score-dot.high::before{background:var(--green)}
+.score-dot.mid::before{background:var(--amber)}
+.score-dot.low::before{background:var(--red)}
+
+/* ── Executive Briefing ── */
+.exec-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.exec-metric{
+  background:var(--white);border-radius:14px;padding:24px;
+  box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;
+}
+.exec-metric-icon{font-size:1.8rem;margin-bottom:8px}
+.exec-metric-val{font-size:1.8rem;font-weight:800;color:var(--purple)}
+.exec-metric-lbl{font-size:.78rem;color:var(--text-mid);font-weight:500;margin-top:4px}
+.briefing-block{
+  background:var(--white);border-radius:14px;padding:28px;
+  box-shadow:var(--shadow);border:1px solid var(--border);
+}
+.briefing-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.briefing-header-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--purple),var(--pink));
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.briefing-title{font-size:1rem;font-weight:700}
+.briefing-sub{font-size:.75rem;color:var(--text-mid)}
+.briefing-body{font-size:.88rem;line-height:1.8;color:var(--text-mid)}
+.briefing-body strong{color:var(--text-dark)}
+.briefing-actions{display:flex;gap:10px;margin-top:20px}
+.btn-primary{
+  padding:10px 20px;background:linear-gradient(90deg,var(--purple),var(--pink));
+  color:#fff;border:none;border-radius:9px;font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:inherit;
+}
+.btn-secondary{
+  padding:10px 20px;background:var(--white);color:var(--purple);
+  border:1.5px solid var(--purple);border-radius:9px;font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:inherit;
+}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--text-dark);margin-bottom:16px}
+
+/* ── Scrollbar ── */
+.tab-content::-webkit-scrollbar{width:6px}
+.tab-content::-webkit-scrollbar-track{background:transparent}
+.tab-content::-webkit-scrollbar-thumb{background:var(--purple-border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Preview Banner -->
+<div class="preview-banner">⚠ PREVIEW ONLY — Tab Layout Concept · Not Live Data · For Review Before Execution</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-logo">🎯</div>
+  <div>
+    <div class="topbar-title">Ecommerce CX Intelligence Hub</div>
+    <div class="topbar-sub" style="font-size:.72rem;color:#9ca3af">Navedas Intelligence v10 · Jan 2025 – Mar 2026</div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-badge">● Live</div>
+    <div class="topbar-role">👤 CX Director</div>
+    <div class="topbar-avatar">SN</div>
+  </div>
+</div>
+
+<!-- Shell -->
+<div class="shell">
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-item active" onclick="switchTab('overview')">📊<span class="tip">Overview</span></div>
+    <div class="sidebar-item" onclick="switchTab('agents')">👥<span class="tip">Agent Performance</span></div>
+    <div class="sidebar-item" onclick="switchTab('signals')">📡<span class="tip">Signal Intelligence</span></div>
+    <div class="sidebar-item" onclick="switchTab('tickets')">🎫<span class="tip">Ticket Intelligence</span></div>
+    <div class="sidebar-item" onclick="switchTab('briefing')">📋<span class="tip">Executive Briefing</span></div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item">⚙️<span class="tip">Settings</span></div>
+  </nav>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-btn active" id="tab-overview" onclick="switchTab('overview')">
+        <span class="tab-icon">📊</span> Overview <span class="tab-count">4 KPIs</span>
+      </div>
+      <div class="tab-btn" id="tab-agents" onclick="switchTab('agents')">
+        <span class="tab-icon">👥</span> Agent Performance <span class="tab-count">12</span>
+      </div>
+      <div class="tab-btn" id="tab-signals" onclick="switchTab('signals')">
+        <span class="tab-icon">📡</span> Signal Intelligence <span class="tab-count">6</span>
+      </div>
+      <div class="tab-btn" id="tab-tickets" onclick="switchTab('tickets')">
+        <span class="tab-icon">🎫</span> Ticket Intelligence <span class="tab-count">1,000</span>
+      </div>
+      <div class="tab-btn" id="tab-briefing" onclick="switchTab('briefing')">
+        <span class="tab-icon">📋</span> Executive Briefing
+      </div>
+    </div>
+
+    <!-- ── TAB: Overview ── -->
+    <div class="tab-content active" id="content-overview">
+      <div class="kpi-row">
+        <div class="kpi-card purple">
+          <div class="kpi-label">Total Tickets</div>
+          <div class="kpi-value">1,000</div>
+          <div class="kpi-sub">Jan 2025 – Mar 2026</div>
+          <div class="kpi-badge up">↑ 8% MoM</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Avg CSAT Score</div>
+          <div class="kpi-value">87.7%</div>
+          <div class="kpi-sub">Industry avg: 72%</div>
+          <div class="kpi-badge up">↑ +15.7pts vs benchmark</div>
+        </div>
+        <div class="kpi-card pink">
+          <div class="kpi-label">Revenue at Risk</div>
+          <div class="kpi-value">$45K</div>
+          <div class="kpi-sub">342 revenue tickets</div>
+          <div class="kpi-badge down">↓ Needs action</div>
+        </div>
+        <div class="kpi-card red">
+          <div class="kpi-label">Churn Rate (Latest)</div>
+          <div class="kpi-value">36.7%</div>
+          <div class="kpi-sub">Peak: 42.9% Dec 2025</div>
+          <div class="kpi-badge up">↑ Improving</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">CX Health Trend</div>
+              <div class="chart-card-sub">CSAT & Churn Rate — Jan 2025 to Mar 2026</div>
+            </div>
+            <div style="font-size:.72rem;color:var(--text-light);background:var(--purple-light);padding:4px 10px;border-radius:8px;font-weight:600">15 months</div>
+          </div>
+          <div class="chart-placeholder">
+            <svg viewBox="0 0 500 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#7c3aed" stop-opacity=".3"/>
+                  <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ec4899" stop-opacity=".2"/>
+                  <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,120 C40,110 80,90 120,85 C160,80 200,95 240,88 C280,80 320,70 360,65 C400,60 450,68 500,60" fill="url(#g1)" stroke="none"/>
+              <path d="M0,120 C40,110 80,90 120,85 C160,80 200,95 240,88 C280,80 320,70 360,65 C400,60 450,68 500,60" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M0,100 C40,108 80,115 120,120 C160,125 200,118 240,122 C280,126 320,115 360,118 C400,122 450,110 500,105" fill="url(#g2)" stroke="none"/>
+              <path d="M0,100 C40,108 80,115 120,120 C160,125 200,118 240,122 C280,126 320,115 360,118 C400,122 450,110 500,105" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-dasharray="5,3"/>
+            </svg>
+            <div style="position:relative;z-index:1;text-align:center">
+              <div style="font-size:.75rem;color:#6b7280;font-weight:600">Live chart renders here</div>
+              <div style="display:flex;gap:14px;margin-top:6px;justify-content:center">
+                <span style="font-size:.7rem;color:#7c3aed;font-weight:600">— CSAT Score</span>
+                <span style="font-size:.7rem;color:#ec4899;font-weight:600">- - Churn Rate</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div>
+              <div class="chart-card-title">Revenue Impact by Month</div>
+              <div class="chart-card-sub">Refunds & Promotions — $45K total</div>
+            </div>
+            <div style="font-size:.72rem;color:var(--text-light);background:var(--pink-light);padding:4px 10px;border-radius:8px;font-weight:600;color:#ec4899">$45K</div>
+          </div>
+          <div class="chart-placeholder" style="background:linear-gradient(135deg,#fce7f3,#fff1f2)">
+            <svg viewBox="0 0 500 200" preserveAspectRatio="none">
+              <rect x="20" y="120" width="28" height="60" rx="4" fill="#ec4899" opacity=".6"/>
+              <rect x="60" y="90" width="28" height="90" rx="4" fill="#ec4899" opacity=".7"/>
+              <rect x="100" y="100" width="28" height="80" rx="4" fill="#ec4899" opacity=".6"/>
+              <rect x="140" y="70" width="28" height="110" rx="4" fill="#ec4899" opacity=".8"/>
+              <rect x="180" y="85" width="28" height="95" rx="4" fill="#ec4899" opacity=".7"/>
+              <rect x="220" y="110" width="28" height="70" rx="4" fill="#f43f5e" opacity=".5"/>
+              <rect x="260" y="95" width="28" height="85" rx="4" fill="#f43f5e" opacity=".6"/>
+              <rect x="300" y="75" width="28" height="105" rx="4" fill="#f43f5e" opacity=".7"/>
+              <rect x="340" y="60" width="28" height="120" rx="4" fill="#f43f5e" opacity=".8"/>
+              <rect x="380" y="80" width="28" height="100" rx="4" fill="#ec4899" opacity=".6"/>
+              <rect x="420" y="100" width="28" height="80" rx="4" fill="#ec4899" opacity=".5"/>
+              <rect x="460" y="90" width="28" height="90" rx="4" fill="#ec4899" opacity=".6"/>
+            </svg>
+            <div style="position:relative;z-index:1;text-align:center">
+              <div style="font-size:.75rem;color:#6b7280;font-weight:600">Live chart renders here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Agent Performance ── -->
+    <div class="tab-content" id="content-agents">
+      <div class="section-title">Agent Performance — Team Summary &nbsp;<span style="font-size:.75rem;color:var(--text-mid);font-weight:400">12 Agents · 1,000 Tickets</span></div>
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-card-header">
+            <div class="team-icon purple">📉</div>
+            <div>
+              <div class="team-name">Churn Risk Team</div>
+              <div class="team-tickets">342 tickets · Avg CSAT 81%</div>
+            </div>
+          </div>
+          <div class="agent-list">
+            <div class="agent-row">
+              <span class="agent-name">M. Webb</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:71%;background:linear-gradient(90deg,#f43f5e,#f97316)"></div></div>
+              <span class="agent-pct" style="color:#f43f5e">71%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">S. Patel</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:82%"></div></div>
+              <span class="agent-pct">82%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">R. Sharma</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:88%"></div></div>
+              <span class="agent-pct">88%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-card-header">
+            <div class="team-icon green">💰</div>
+            <div>
+              <div class="team-name">Revenue Recovery Team</div>
+              <div class="team-tickets">342 tickets · Avg CSAT 86%</div>
+            </div>
+          </div>
+          <div class="agent-list">
+            <div class="agent-row">
+              <span class="agent-name">P. Nair</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:93%;background:linear-gradient(90deg,#10b981,#3b82f6)"></div></div>
+              <span class="agent-pct" style="color:#10b981">93%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">A. Kumar</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:87%"></div></div>
+              <span class="agent-pct">87%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">T. Singh</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:84%"></div></div>
+              <span class="agent-pct">84%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-card-header">
+            <div class="team-icon pink">🎁</div>
+            <div>
+              <div class="team-name">Loyalty & Retention Team</div>
+              <div class="team-tickets">316 tickets · Avg CSAT 89%</div>
+            </div>
+          </div>
+          <div class="agent-list">
+            <div class="agent-row">
+              <span class="agent-name">K. Mehta</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:91%"></div></div>
+              <span class="agent-pct">91%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">D. Rao</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:89%"></div></div>
+              <span class="agent-pct">89%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">V. Iyer</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:85%"></div></div>
+              <span class="agent-pct">85%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="team-card">
+          <div class="team-card-header">
+            <div class="team-icon amber">🧾</div>
+            <div>
+              <div class="team-name">Billing & Disputes Team</div>
+              <div class="team-tickets">120 tickets · Avg CSAT 83%</div>
+            </div>
+          </div>
+          <div class="agent-list">
+            <div class="agent-row">
+              <span class="agent-name">N. Gupta</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:90%"></div></div>
+              <span class="agent-pct">90%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">F. Ali</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:83%"></div></div>
+              <span class="agent-pct">83%</span>
+            </div>
+            <div class="agent-row">
+              <span class="agent-name">B. Joshi</span>
+              <div class="agent-bar-wrap"><div class="agent-bar" style="width:77%"></div></div>
+              <span class="agent-pct" style="color:#f59e0b">77%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Signal Intelligence ── -->
+    <div class="tab-content" id="content-signals">
+      <div class="section-title">CX Signal Intelligence → ROI Action Cards &nbsp;<span style="font-size:.75rem;color:var(--text-mid);font-weight:400">6 Active Signals</span></div>
+      <div class="signal-grid">
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--red-light)">📉</div>
+            <div class="signal-tag" style="background:var(--red-light);color:var(--red)">High Risk</div>
+          </div>
+          <div class="signal-title">Churn Risk Detection</div>
+          <div class="signal-desc">342 at-risk customers identified. Peak churn at 42.9% Dec 2025. Deploy retention playbook immediately.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">342</div><div class="signal-metric-lbl">At-Risk</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">$122</div><div class="signal-metric-lbl">Avg LTV</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">$8.4K</div><div class="signal-metric-lbl">Recoverable</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--green-light)">💰</div>
+            <div class="signal-tag" style="background:var(--green-light);color:var(--green)">Revenue</div>
+          </div>
+          <div class="signal-title">Revenue Leak Prevention</div>
+          <div class="signal-desc">$45K total revenue at risk across 342 tickets. 109 promo abuse cases, 113 refund escalations.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">$45K</div><div class="signal-metric-lbl">At Risk</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">109</div><div class="signal-metric-lbl">Promo</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">113</div><div class="signal-metric-lbl">Refunds</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--pink-light)">🎁</div>
+            <div class="signal-tag" style="background:var(--pink-light);color:var(--pink)">Loyalty</div>
+          </div>
+          <div class="signal-title">Loyalty Score Decline</div>
+          <div class="signal-desc">316 loyalty tickets. 112 negative sentiment. Avg NPS score 39.3 — below threshold.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">316</div><div class="signal-metric-lbl">Tickets</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">112</div><div class="signal-metric-lbl">Negative</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">39.3</div><div class="signal-metric-lbl">Avg NPS</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--amber-light)">🧾</div>
+            <div class="signal-tag" style="background:var(--amber-light);color:#92400e">Billing</div>
+          </div>
+          <div class="signal-title">Billing Dispute Surge</div>
+          <div class="signal-desc">120 billing tickets. Avg $106 per incident. Automate invoice reconciliation to reduce by 32%.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">120</div><div class="signal-metric-lbl">Tickets</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">$106</div><div class="signal-metric-lbl">Avg Cost</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">32%</div><div class="signal-metric-lbl">Reducible</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--blue-light)">👤</div>
+            <div class="signal-tag" style="background:var(--blue-light);color:var(--blue)">Agent</div>
+          </div>
+          <div class="signal-title">Agent Performance Gap</div>
+          <div class="signal-desc">M. Webb at 71% CSAT — 14pt gap vs team best. 128 tickets affected. Coaching plan required.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">71%</div><div class="signal-metric-lbl">Worst CSAT</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">14pt</div><div class="signal-metric-lbl">Gap</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">128</div><div class="signal-metric-lbl">Tickets</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+        <div class="signal-card">
+          <div class="signal-header">
+            <div class="signal-icon-wrap" style="background:var(--purple-light)">🔄</div>
+            <div class="signal-tag" style="background:var(--purple-light);color:var(--purple)">Win-Back</div>
+          </div>
+          <div class="signal-title">Win-Back Opportunity</div>
+          <div class="signal-desc">174 resolved vs 168 pending. 51% win-back rate. $120K total addressable revenue opportunity.</div>
+          <div class="signal-metrics">
+            <div class="signal-metric"><div class="signal-metric-val">51%</div><div class="signal-metric-lbl">Win-Back</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">174</div><div class="signal-metric-lbl">Resolved</div></div>
+            <div class="signal-metric"><div class="signal-metric-val">$120K</div><div class="signal-metric-lbl">Addressable</div></div>
+          </div>
+          <button class="signal-btn">📊 Open ROI Calculator</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TAB: Ticket Intelligence ── -->
+    <div class="tab-content" id="content-tickets">
+      <div class="section-title">Ticket Intelligence &nbsp;<span style="font-size:.75rem;color:var(--text-mid);font-weight:400">1,000 Records · Top 25 Priority</span></div>
+      <div class="filter-bar">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Loyalty</button>
+        <button class="filter-btn">Revenue</button>
+        <button class="filter-btn">Churn</button>
+        <button class="filter-btn">Billing</button>
+        <input class="search-input" placeholder="🔍 Search by ticket ID, agent, issue…"/>
+      </div>
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>Date</th>
+            <th>Category</th>
+            <th>Agent</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Rev Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>#TKT-0042</strong></td>
+            <td>2026-03-08</td>
+            <td><span style="background:var(--red-light);color:var(--red);padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600">Churn</span></td>
+            <td>M. Webb</td>
+            <td><span class="status-pill escalated">Escalated</span></td>
+            <td><span class="score-dot low">62</span></td>
+            <td style="color:var(--red);font-weight:600">-$240</td>
+          </tr>
+          <tr>
+            <td><strong>#TKT-0187</strong></td>
+            <td>2026-03-06</td>
+            <td><span style="background:var(--green-light);color:var(--green);padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600">Revenue</span></td>
+            <td>P. Nair</td>
+            <td><span class="status-pill resolved">Resolved</span></td>
+            <td><span class="score-dot high">94</span></td>
+            <td style="color:var(--green);font-weight:600">+$180</td>
+          </tr>
+          <tr>
+            <td><strong>#TKT-0321</strong></td>
+            <td>2026-03-05</td>
+            <td><span style="background:var(--pink-light);color:var(--pink);padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600">Loyalty</span></td>
+            <td>K. Mehta</td>
+            <td><span class="status-pill pending">Pending</span></td>
+            <td><span class="score-dot mid">71</span></td>
+            <td style="color:var(--text-mid)">—</td>
+          </tr>
+          <tr>
+            <td><strong>#TKT-0456</strong></td>
+            <td>2026-03-04</td>
+            <td><span style="background:var(--amber-light);color:#92400e;padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600">Billing</span></td>
+            <td>N. Gupta</td>
+            <td><span class="status-pill resolved">Resolved</span></td>
+            <td><span class="score-dot high">88</span></td>
+            <td style="color:var(--red);font-weight:600">-$106</td>
+          </tr>
+          <tr>
+            <td><strong>#TKT-0589</strong></td>
+            <td>2026-03-02</td>
+            <td><span style="background:var(--red-light);color:var(--red);padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600">Churn</span></td>
+            <td>S. Patel</td>
+            <td><span class="status-pill pending">Pending</span></td>
+            <td><span class="score-dot low">58</span></td>
+            <td style="color:var(--red);font-weight:600">-$122</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:.78rem;color:var(--text-mid)">
+        <span>Showing 5 of 1,000 tickets</span>
+        <div style="display:flex;gap:6px">
+          <button class="filter-btn" style="padding:4px 10px">← Prev</button>
+          <button class="filter-btn active" style="padding:4px 10px">1</button>
+          <button class="filter-btn" style="padding:4px 10px">2</button>
+          <button class="filter-btn" style="padding:4px 10px">3</button>
+          <button class="filter-btn" style="padding:4px 10px">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: Executive Briefing ── -->
+    <div class="tab-content" id="content-briefing">
+      <div class="section-title">Board-Ready Briefing — Auto-Generated &nbsp;<span style="font-size:.75rem;color:var(--text-mid);font-weight:400">Executive Summary · GTM Asset</span></div>
+      <div class="exec-metrics">
+        <div class="exec-metric">
+          <div class="exec-metric-icon">📉</div>
+          <div class="exec-metric-val">−20%</div>
+          <div class="exec-metric-lbl">Churn Reduction Achieved</div>
+        </div>
+        <div class="exec-metric">
+          <div class="exec-metric-icon">💰</div>
+          <div class="exec-metric-val">$56K</div>
+          <div class="exec-metric-lbl">Revenue Protected</div>
+        </div>
+        <div class="exec-metric">
+          <div class="exec-metric-icon">⭐</div>
+          <div class="exec-metric-val">+17pts</div>
+          <div class="exec-metric-lbl">CSAT vs Industry Avg</div>
+        </div>
+      </div>
+      <div class="briefing-block">
+        <div class="briefing-header">
+          <div class="briefing-header-icon">📋</div>
+          <div>
+            <div class="briefing-title">Executive Summary — March 2026</div>
+            <div class="briefing-sub">Auto-generated from 1,000 support tickets · Navedas Intelligence v10</div>
+          </div>
+        </div>
+        <div class="briefing-body">
+          The Navedas CX Intelligence platform processed <strong>1,000 support tickets</strong> between Jan 2025 and Mar 2026, identifying <strong>$120,000 in addressable revenue</strong> across 6 active signal categories.<br><br>
+          Churn risk peaked at <strong>42.9% in December 2025</strong> but has declined to <strong>36.7% in March 2026</strong> following targeted interventions — a <strong>20% reduction</strong> in at-risk customer volume. Overall CSAT stands at <strong>87.7%</strong>, outperforming the industry benchmark of 72% by <strong>+15.7 points</strong>.<br><br>
+          <strong>Recommended Actions:</strong> Deploy the Navedas retention playbook on the <strong>168 pending at-risk accounts</strong> this month. Initiate <strong>M. Webb coaching plan</strong> to close the 14pt CSAT gap on 128 General queue tickets. Estimated impact: <strong>−18% churn rate, $56K revenue recoverable within 90 days</strong>.
+        </div>
+        <div class="briefing-actions">
+          <button class="btn-primary">📄 Export PDF</button>
+          <button class="btn-secondary">📋 Copy Briefing</button>
+          <button class="btn-secondary">📧 Email to Board</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+function switchTab(name){
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
+  document.getElementById('tab-'+name).classList.add('active');
+  // Update sidebar
+  document.querySelectorAll('.sidebar-item').forEach(function(b){b.classList.remove('active')});
+  // Update content
+  document.querySelectorAll('.tab-content').forEach(function(c){c.classList.remove('active')});
+  document.getElementById('content-'+name).classList.add('active');
+  // Update filter buttons in ticket tab (demo only)
+  if(name==='tickets'){
+    document.querySelectorAll('#content-tickets .filter-btn').forEach(function(b){
+      b.addEventListener('click',function(){
+        document.querySelectorAll('#content-tickets .filter-btn').forEach(function(x){x.classList.remove('active')});
+        this.classList.add('active');
+      });
+    });
+  }
+}
+</script>
+</body>
+</html>
